@@ -34,4 +34,5 @@ makedocs(
 deploydocs(;
     repo="github.com/DeloitteDigitalAPAC/GraphQLClient.jl",
     push_preview=true,
+    devbranch="main",
 )

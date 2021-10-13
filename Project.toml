@@ -1,0 +1,13 @@
+name = "GraphQLClient"
+uuid = "09d831e3-9c21-47a9-bfd8-076871817219"
+version = "0.7.0"
+
+[deps]
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
+
+[compat]
+HTTP = "0.8.17, 0.9"
+JSON3 = "1.1.2"
+StructTypes = "1.5"

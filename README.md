@@ -2,15 +2,21 @@
 
 *A Julia GraphQL client for seamless integration with a server*
 
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://deloittedigitalapac.github.io/GraphQLClient.jl/stable)
+[![Stable](https://img.shields.io/badge/docs-dev-blue.svg)](https://deloittedigitalapac.github.io/GraphQLClient.jl/dev)
+[![Build Status](https://github.com/DeloitteDigitalAPAC/GraphQLClient.jl/workflows/CI/badge.svg?branch=main)](https://github.com/DeloitteDigitalAPAC/GraphQLClient.jl/actions?query=workflow%3ACI+branch%3Amain)
+[![Codecov](https://codecov.io/gh/DeloitteDigitalAPAC/GraphQLClient.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/DeloitteDigitalAPAC/GraphQLClient.jl)
+[![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
+
 This package is intended to make connecting to and communicating with GraphQL servers easy whilst integrating easily with the wider Julia ecosystem.
 
 ## Key Features
 
-- Querying, mutating and subscribing without manual writing of query strings
-- Deserializing responses directly using StructTypes
+- **Querying**, **mutating** and **subscribing** without manual writing of query strings
+- Deserializing responses directly using **StructTypes**
 - Type stable querying
-- Construction of Julia types from GraphQL objects
-- Using introspected schema for various purposes, such as getting all possible output fields from a query
+- **Construction of Julia types** from GraphQL objects
+- Using **introspection** to help with querying
 
 ## Installation
 
@@ -30,80 +36,83 @@ julia> using Pkg; Pkg.add("GraphQLClient")
 
 A client can be instantiated by using the `Client` type
 
-```julia-repl
-julia> using GraphQLClient
+```julia
+using GraphQLClient
 
-julia> client = Client("https://countries.trevorblades.com")
-GraphQLClient Client
-       endpoint: https://countries.trevorblades.com
-    ws_endpoint: wss://countries.trevorblades.com
+client = Client("https://countries.trevorblades.com")
 ```
 
-This will, by default, use a query to introspect the server schema, populating
-several fields of the `Client` object which can then be used to help with
-querying.
+This will, by default, use a query to introspect the server schema.
 
 ### Querying
 
-We can query it without having to type a full GraphQL query by hand
+We can query a `client` without having to type a full GraphQL query by hand, with the response containing fields obtained by introspection
 
-```julia-repl
-julia> response = query(client, "countries")
-GraphQLClient.GQLResponse{Any}
-  data: Dict{String, Any}
-    countries: Vector{Any}
+```julia
+response = query(client, "countries")
 ```
 
-We can add arguments and request fields in the response
+We can add arguments and speciy fields in the response
 
-```julia-repl
-julia> query_args = Dict("filter" => Dict("code" => Dict("eq" => "AU"))); # Filter for countries with code equal to AU
-
-julia> response = query(client, "countries"; query_args=query_args, output_fields="name");
-
-julia> response.data["countries"]
-1-element Vector{Any}:
- Dict{String, Any}("name" => "Australia")
+```julia
+query_args = Dict("filter" => Dict("code" => Dict("eq" => "AU")))
+response = query(client, "countries"; query_args=query_args, output_fields="name");
+response.data["countries"]
+# 1-element Vector{Any}:
+#  Dict{String, Any}("name" => "Australia")
 ```
+
+Or we can query with the query string directly
+
+```julia
+query_string = """
+    query(
+      \$eq: String
+    ){
+    countries(
+        filter:{
+            code:{
+                eq:\$eq
+            }
+        }
+    ){
+        name
+    }
+}
+"""
+
+variables = Dict("eq" => "AU")
+
+response = GraphQLClient.execute(client, query_string, variables=variables)
+```
+
 
 We can define a `StructType` to deserialise the result into
 
-```julia-repl
-julia> using StructTypes
+```julia
+using StructTypes
 
-julia> struct CountryName
-           name::String
-       end
+struct CountryName
+    name::String
+end
+StructTypes.StructType(::Type{CountryName}) = StructTypes.OrderedStruct()
 
-julia> StructTypes.StructType(::Type{CountryName}) = StructTypes.OrderedStruct()
+response = query(client, "countries", Vector{CountryName}, query_args=query_args, output_fields="name")
 
-julia> response = query(client, query_alias, Vector{CountryName}, query_args=query_args, output_fields="name")
-GraphQLClient.GQLResponse{Vector{CountryName}}
-  data: Dict{String, Union{Nothing, Vector{CountryName}}}
-          country_names: Vector{CountryName}
-
-julia> response.data["country_names"][1]
-CountryName("Australia")
+response.data["countries"][1]
+# CountryName("Australia")
 ```
 
 Or we can use introspection to build the type automatically
 
-```julia-repl
-julia> Country = GraphQLClient.introspect_object(client, "Country")
-┌ Warning: Cannot introspect field country on type State due to recursion of object Country
-└ @ GraphQLClient ../GraphQLClient/src/type_construction.jl:75
-┌ Warning: Cannot introspect field countries on type Continent due to recursion of object Country
-└ @ GraphQLClient ../GraphQLClient/src/type_construction.jl:75
-GraphQLClient.var"##Country#604"
+```julia
+Country = GraphQLClient.introspect_object(client, "Country")
 
-julia> response = query(client, query_alias, Vector{Country}, query_args=query_args, output_fields="name")
-GQLResponse{Vector{GraphQLClient.var"##Country#604"}}
-  data: Dict{String, Union{Nothing, Vector{GraphQLClient.var"##Country#604"}}}
-          country_names: Vector{GraphQLClient.var"##Country#604"}
+response = query(client, "countries", Vector{Country}, query_args=query_args, output_fields="name")
 
-julia> response.data["country_names"][1]
-Country
-  name : Australia
+response.data["countries"][1]
+# Country
+#   name : Australia
 ```
 
 ### Mutations
@@ -111,11 +120,10 @@ Country
 Mutations can be constructed in a similar way, except the arguments are not a keyword argument as typically
 a mutation is doing something with an input. For example
 
-```julia-repl
-julia> response = mutate(client, "mutation_name", Dict("new_id" => 1))
+```julia
+response = mutate(client, "mutation_name", Dict("new_id" => 1))
 ```
 
-Unlike with `query`, the output fields are not introspected as mutations often do not have a response.
 
 ### Subscriptions
 

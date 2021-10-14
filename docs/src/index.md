@@ -8,11 +8,11 @@ What is GraphQL? It is a *"query language for APIs and a runtime for fulfilling 
 
 ## Key Features of GraphQLClient
 
-- Querying, mutating and subscribing without manual writing of query strings
-- Deserializing responses directly using StructTypes
+- **Querying**, **mutating** and **subscribing** without manual writing of query strings
+- Deserializing responses directly using **StructTypes**
 - Type stable querying
-- Construction of Julia types from GraphQL objects
-- Using introspected schema for various purposes, such as getting all possible output fields from a query
+- **Construction of Julia types** from GraphQL objects
+- Using **introspection** to help with querying
 
 !!! info "There is plenty more to come"
     GraphQL is a featureful language, and we are working to bring in new features to meet all of the specification.

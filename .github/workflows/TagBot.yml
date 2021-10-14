@@ -1,7 +1,8 @@
 name: TagBot
-on:
-  schedule:
-    - cron: 0 0 * * *
+  issue_comment:
+    types:
+      - created
+  workflow_dispatch:
 jobs:
   TagBot:
     runs-on: ubuntu-latest

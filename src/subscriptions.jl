@@ -2,7 +2,7 @@ const subscription_tracker = Ref{Dict}(Dict())
 
 """
     open_subscription(fn::Function,
-                      client::Client,
+                      [client::Client],
                       subscription_name::Union{Alias, AbstractString},
                       output_type::Type=Any;
                       sub_args=Dict(),
@@ -29,7 +29,7 @@ This function is designed to be used with the `do` keyword.
 - `fn::Function`: function to be run on each result, recieves the response from the
     subscription`. Must return a boolean to indicate whether or not to close the subscription,
     with `true` closing the subscription.
-- `client::Client`: GraphQL client.
+- `client::Client`: GraphQL client (optional). If not supplied, [`global_graphql_client`](@ref) is used.
 - `subscription_name::Union{Alias, AbstractString}`: name of subscription in server.
 - `output_type::Type=Any`: output data type for subscription response object. An object
     of type `GQLResponse{output_type}` will be returned.For further information, see
@@ -61,6 +61,12 @@ julia> open_subscription("subSaveUser", sub_args=Dict("role" => "SYSTEM_ADMIN"))
 
 See also: [`GQLResponse`](@ref)
 """
+function open_subscription(fn::Function,
+                           subscription_name::Union{Alias, AbstractString},
+                           output_type::Type=Any;
+                           kwargs...)
+    return open_subscription(fn, global_graphql_client(), subscription_name, output_type; kwargs...)
+end
 function open_subscription(fn::Function,
                            client::Client,
                            subscription_name::Union{Alias, AbstractString},

@@ -147,7 +147,7 @@ function _instrospect_object(client,
 end
 
 """
-    introspect_object(client
+    introspect_object([client::Client],
                       object_name;
                       force=false,
                       reset_all=false,
@@ -223,7 +223,8 @@ reason.
 - `custom_scalar_types`: dictionary of custom GraphQL scalar type to Julia type. This kwarg enables
     custom scalar types to be introspected to the correct type.
 """
-function introspect_object(client,
+introspect_object(object_name; kwargs...) = introspect_object(global_graphql_client(), object_name; kwargs...)
+function introspect_object(client::Client,
                            object_name;
                            force=false,
                            reset_all=false,
@@ -261,27 +262,30 @@ function introspect_object(client,
 end
 
 """
-    get_introspected_type(client, object_name::String)
+    get_introspected_type([client::Client], object_name::String)
 
 Return the introspected `Type` for an object.
 """
-get_introspected_type(client, object_name::String) = client.introspected_types[object_name]
+get_introspected_type(object_name::String) = get_introspected_type(global_graphql_client(), object_name)
+get_introspected_type(client::Client, object_name::String) = client.introspected_types[object_name]
 
 """
-    list_all_introspected_objects(client)
+    list_all_introspected_objects([client::Client])
 
 Return a `Vector` of the objects which have been introspected.
 """
-list_all_introspected_objects(client) = collect(keys(client.introspected_types))
+list_all_introspected_objects() = list_all_introspected_objects(global_graphql_client())
+list_all_introspected_objects(client::Client) = collect(keys(client.introspected_types))
 
 """
-    initialise_introspected_struct(client, name::String)
-    initialise_introspected_struct(client, name::SubString)
+    initialise_introspected_struct([client::Client], name::String)
+    initialise_introspected_struct([client::Client], name::SubString)
     initialise_introspected_struct(T::Type)
 
 Initialise an introspected struct with all fields set to nothing. If name of
 type supplied as string, this get the `Type` from `client.introspected_types`.
 """
+initialise_introspected_struct(name::AbstractString) = initialise_introspected_struct(global_graphql_client(), name)
 initialise_introspected_struct(client::Client, name::String) = initialise_introspected_struct(client.introspected_types[name])
 initialise_introspected_struct(client::Client, name::SubString) = initialise_introspected_struct(client, string(name))
 function initialise_introspected_struct(T::Type)
@@ -290,7 +294,7 @@ function initialise_introspected_struct(T::Type)
 end
 
 """
-    create_introspected_struct(client::Client, object_name::AbstractString, fields::AbstractDict)
+    create_introspected_struct([client::Client], object_name::AbstractString, fields::AbstractDict)
 
 Creates a struct for the object specified and populates its fields with
 the keys and values of `fields`.
@@ -303,6 +307,7 @@ ResultObject
       resultId : MyResult
 ```
 """
+create_introspected_struct(object_name::AbstractString, fields::AbstractDict) = create_introspected_struct(global_graphql_client(), object_name, fields)
 function create_introspected_struct(client::Client, object_name::AbstractString, fields::AbstractDict)
     struct_instance = initialise_introspected_struct(client, object_name)
     !ismutable(struct_instance) && throw(GraphQLClientException("create_introspected_struct only works for mutable types"))

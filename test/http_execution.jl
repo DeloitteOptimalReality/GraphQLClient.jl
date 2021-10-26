@@ -167,4 +167,14 @@ end
     @inferred GraphQLClient.execute(client, "val", S2)
     response = GraphQLClient.execute(client, "val")
     @test response.data["queryName"]["field"]["query"] == "val"
+
+    global_graphql_client(client)
+    @inferred GraphQLClient.execute(Dict("query" => "val"))
+    @inferred GraphQLClient.execute(Dict("query" => "val"), S2)
+    response = GraphQLClient.execute(Dict("query" => "val"))
+    @test response.data["queryName"]["field"]["query"] == "val"
+    @inferred GraphQLClient.execute("val")
+    @inferred GraphQLClient.execute("val", S2)
+    response = GraphQLClient.execute("val")
+    @test response.data["queryName"]["field"]["query"] == "val"
 end

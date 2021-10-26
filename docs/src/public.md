@@ -10,6 +10,7 @@ Documentation for GraphQLClient's public interface.
 
 ```@docs
 Client
+global_graphql_client
 full_introspection!
 get_queries
 get_mutations

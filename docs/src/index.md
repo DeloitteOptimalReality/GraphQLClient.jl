@@ -25,7 +25,7 @@ What is GraphQL? It is a *"query language for APIs and a runtime for fulfilling 
 
 A client can be instantiated by using the `Client` type
 
-```jldoctest
+```jldoctest client_intro
 julia> using GraphQLClient
 
 julia> client = Client("https://countries.trevorblades.com")
@@ -38,6 +38,23 @@ This will, by default, use a query to introspect the server schema, populating
 several fields of the `Client` object which can then be used to help with
 querying.
 
+We can set a global client to be used by [`query`](@ref), [`mutate`](@ref), [`open_subscription`](@ref) and [`GraphQLClient.execute`](@ref).
+
+```jldoctest client_intro
+julia> global_graphql_client(Client("https://countries.trevorblades.com"))
+GraphQLClient Client
+       endpoint: https://countries.trevorblades.com
+    ws_endpoint: wss://countries.trevorblades.com
+```
+
+And access the global client with the same function
+
+```jldoctest client_intro
+julia> global_graphql_client()
+GraphQLClient Client
+       endpoint: https://countries.trevorblades.com
+    ws_endpoint: wss://countries.trevorblades.com
+```
 ### Querying
 
 ```@meta

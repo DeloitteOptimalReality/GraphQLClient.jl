@@ -13,7 +13,7 @@ If only the `endpoint` is suppplied, the `ws_endpoint` (used for subscriptions) 
 Headers can be passed in a dictionary to the `headers` keyword argument, enabling things like authorisation tokens. These headers are 
 used directly in the HTTP requests to the server.
 
-```
+```julia
 client = Client(
     "https://myurl.com/queries",
     "wss://myurl.com/subscriptions",
@@ -22,6 +22,24 @@ client = Client(
 ```
 
 By default, when instantiated GraphQLClient will introspect the schema of the server and populate several fields of the `Client` object.
+
+## Global Client
+
+A client can be set as the global client, which means that queries and other operations do not need the client
+passing as an argument.
+
+```julia
+global_graphql_client(Client("https://countries.trevorblades.com"))
+```
+
+The global client can then be accessed by the same function
+
+```julia
+julia> global_graphql_client()
+GraphQLClient Client
+       endpoint: https://countries.trevorblades.com
+    ws_endpoint: wss://countries.trevorblades.com
+```
 
 ## Introspection
 

@@ -7,6 +7,7 @@ using Test
 include("utils.jl")
 
 @testset "GraphQLClient" begin
+    @testset "Client" begin include("client.jl") end
     @testset "Introspection" begin include("introspection.jl") end
     @testset "Schema Utils" begin include("schema_utils.jl") end
     @testset "Output Fields" begin include("output_fields.jl") end

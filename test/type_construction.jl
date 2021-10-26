@@ -125,6 +125,11 @@ end
     T2_sub = GraphQLClient.get_introspected_type(client, "MySubObject")
     @test T1 === T2
     @test T1_sub === T2_sub
+    # Test global client methods
+    global_graphql_client(client)
+    T2_global = GraphQLClient.introspect_object("MyObject")
+    @test T1 === T2_global
+    @test GraphQLClient.get_introspected_type("MySubObject") === T1_sub
     # Test that force re-introspects all objects that are requested and are subobjects and no others
     T3 = GraphQLClient.introspect_object(client, "MyObject", force=true)
     T3_sub = GraphQLClient.get_introspected_type(client, "MySubObject")
@@ -223,6 +228,8 @@ end
 
     # Test Initialise
     my_object = GraphQLClient.initialise_introspected_struct(client, SubString("MyObject"))
+    @test all(isnothing(getproperty(my_object, property)) for property in propertynames(my_object))
+    my_object = GraphQLClient.initialise_introspected_struct(SubString("MyObject"))
     @test all(isnothing(getproperty(my_object, property)) for property in propertynames(my_object))
 
     # Test create

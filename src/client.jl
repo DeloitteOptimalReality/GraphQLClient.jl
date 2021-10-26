@@ -123,3 +123,31 @@ function get_subscriptions(client::Client)
     !client.introspection_complete && full_introspection!(client)
     return client.subscriptions
 end
+
+"""
+    CLIENT
+
+`Ref` which contains the global `Client`.
+"""
+const CLIENT = Ref{Client}()
+
+"""
+    global_graphql_client()
+
+Retrieve the global `Client`.
+"""
+function global_graphql_client()
+    if !isassigned(CLIENT)
+        throw(GraphQLClientException("Global client not set. Use global_graphql_client(client) to set."))
+    end
+    return CLIENT[]
+end
+
+"""
+    global_graphql_client(client::Client)
+
+Set the global `Client.`
+"""
+function global_graphql_client(client::Client)
+    return CLIENT[] = client
+end

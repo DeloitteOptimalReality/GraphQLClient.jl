@@ -7,7 +7,7 @@ using StructTypes
 export query, mutate, open_subscription, Client, GQLEnum, Alias,
     full_introspection!, get_queries, get_mutations, get_subscriptions,
     introspect_object, get_introspected_type, initialise_introspected_struct,
-    create_introspected_struct, list_all_introspected_objects
+    create_introspected_struct, list_all_introspected_objects, global_graphql_client
 
 # Types
 include("client.jl")

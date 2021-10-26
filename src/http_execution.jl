@@ -1,12 +1,12 @@
 """
-    execute(client::Client, query::AbstractString, output_type::Type{T}=Any; kwargs...) where T
-    execute(client::Client, payload::AbstractDict, output_type::Type{T}=Any; kwargs...) where T
+    execute([client::Client], query::AbstractString, output_type::Type{T}=Any; kwargs...) where T
+    execute([client::Client], payload::AbstractDict, output_type::Type{T}=Any; kwargs...) where T
     execute(endpoint::AbstractString, query::AbstractString, headers::AbstractDict=Dict(), output_type::Type{T}=Any; variables=Dict(), kwargs...) where T
     execute(endpoint::AbstractString, payload::AbstractDict, headers::AbstractDict=Dict(), output_type::Type{T}=Any; kwargs...) where T
 
 Executes a HTTP Post request and returns the result as a `GQLResponse{T}`.
 
-This function allows for lower level querying of the GraphQL server. A `Client` or endpoint can be
+This function allows for lower level querying of the GraphQL server. A `Client`, the global client or endpoint can be
 queried with a query string (and optionally variables can be supplied to the keyword argument), or
 with the payload directly. This payload is typically a dictionary containing the key "query"
 at a minimum, with `variables` (and other keys) begin optional.
@@ -35,6 +35,13 @@ GraphQLClient.GQLResponse{Any}
   data: Dict{String, Any}
       country: Dict{String, Any}
 
+julia> global_graphql_client(Client("https://countries.trevorblades.com"));
+
+julia> GraphQLClient.execute("query{country(code:\\"BR\\"){name}}")
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+      country: Dict{String, Any}
+
 julia> GraphQLClient.execute("https://countries.trevorblades.com", "query{country(code:\\"BR\\"){name}}")
 GraphQLClient.GQLResponse{Any}
   data: Dict{String, Any}
@@ -49,9 +56,11 @@ GraphQLClient.GQLResponse{Any}
       country: Dict{String, Any}
 ```
 """
+execute(query::AbstractString, output_type::Type{T}=Any; kwargs...) where T = execute(global_graphql_client(), query, output_type; kwargs...)
 function execute(client::Client, query::AbstractString, output_type::Type{T}=Any; variables=Dict(), kwargs...) where T
     return execute(client, Dict("query" => query, "variables" => variables), output_type; kwargs...)
 end
+execute(payload::AbstractDict, output_type::Type{T}=Any; kwargs...) where T  = execute(global_graphql_client(), payload, output_type; kwargs...)
 function execute(client::Client, payload::AbstractDict, output_type::Type{T}=Any; kwargs...) where T
     return execute(client.endpoint, payload, client.headers, output_type; kwargs...)
 end

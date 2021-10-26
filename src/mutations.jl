@@ -1,7 +1,9 @@
 """
-    mutate(client::Client, mutation_name::Union{Alias, AbstractString}, args::AbstractDict, output_type::Type=Any; kwargs...)
+    mutate([client::Client], mutation_name::Union{Alias, AbstractString}, args::AbstractDict, output_type::Type=Any; kwargs...)
 
-Perform a mutation on the server. If no `output_fields` are supplied, none are returned.
+Perform a mutation on the server, using the global client if `client` not supplied.
+
+If no `output_fields` are supplied, none are returned.
 
 By default `mutate` returns a `GQLReponse{Any}`, where the data for an individual mutation
 can be found by `gql_response.data[mutation_name]`.
@@ -9,7 +11,7 @@ can be found by `gql_response.data[mutation_name]`.
 The mutation uses the `endpoint` field of the `client`.
 
 # Arguments
-- `client::Client`: GraphQL client
+- `client::Client`: GraphQL client (optional). If not supplied, [`global_graphql_client`](@ref) is used.
 - `mutation_name::Union{Alias, AbstractString}`: name of mutation_name.
 - `args`: dictionary of mutation argument key value pairs - can be nested with
     dictionaries and vectors.
@@ -31,6 +33,7 @@ The mutation uses the `endpoint` field of the `client`.
 
 See also: [`GQLResponse`](@ref)
 """
+mutate(mutation_name::Union{Alias, AbstractString}, args::AbstractDict, output_type::Type=Any; kwargs...) = mutate(global_graphql_client(), mutation_name, args, output_type; kwargs...)
 function mutate(client::Client, mutation_name::Union{Alias, AbstractString}, args::AbstractDict, output_type::Type=Any; output_fields=String[], kwargs...)
     !in(get_name(mutation_name), get_mutations(client)) && throw(GraphQLClientException("$(get_name(mutation_name)) is not an existing mutation"))
     

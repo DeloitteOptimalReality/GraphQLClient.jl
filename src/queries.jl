@@ -110,9 +110,11 @@ function generic_gql_query(client::Client,
 end
 
 """
-    query(client::Client, query_name::Union{Alias, AbstractString}, output_type::Type=Any; kwargs...)
+    query([client::Client], query_name::Union{Alias, AbstractString}, output_type::Type=Any; kwargs...)
 
-Perform a query on the server. If no `output_fields` are supplied, all possible
+Perform a query on the server, using the global client if `client` not supplied.
+
+If no `output_fields` are supplied, all possible
 fields (determined by introspection of `client`) are returned.
 
 The query uses the `endpoint` field of the `client`.
@@ -121,7 +123,7 @@ By default `query` returns a `GQLReponse{Any}`, where the data for an individual
 can be found by `gql_response.data[query_name]`.
 
 # Arguments
-- `client::Client`: GraphQL client.
+- `client::Client`: GraphQL client (optional). If not supplied, [`global_graphql_client`](@ref) is used.
 - `query_name::Union{Alias, AbstractString}`: name of query in server.
 - `output_type::Type=Any`: output data type for query response object. An object of type
     `GQLResponse{output_type}` will be returned. For further information, see documentation
@@ -145,6 +147,7 @@ can be found by `gql_response.data[query_name]`.
 
 See also: [`GQLResponse`](@ref)
 """
+query(query_name::Union{Alias, AbstractString}, output_type::Type=Any; kwargs...) = query(global_graphql_client(), query_name, output_type; kwargs...)
 function query(client::Client, query_name::Union{Alias, AbstractString}, output_type::Type=Any; query_args=Dict(),output_fields=String[], kwargs...)
     !in(get_name(query_name), get_queries(client)) && throw(GraphQLClientException("$(get_name(query_name)) is not an existing query"))
 

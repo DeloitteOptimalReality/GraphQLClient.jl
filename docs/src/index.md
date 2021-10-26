@@ -204,15 +204,10 @@ end
 GraphQL is often used with microservice architectures. Often, you will find that you have multiple microservices that perform the same GraphQL queries. A nice solution to this is to write a new package which wraps GraphQLClient and provides a higher-level interface, and which also handles connection to the server. For example, the `country` query above could be wrapped as follows
 
 ```julia
-const CLIENT = Ref(Client)
-
-function connect()
-    CLIENT[] = Client("url","ws")
-end
+connect() = global_graphql_client(Client("url","ws"))
 
 function get_country(code)
     response = query(
-        CLIENT[],
         "country",
         query_args=Dict("code"=>code),
         output_fields="name"

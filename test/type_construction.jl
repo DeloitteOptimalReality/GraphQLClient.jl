@@ -247,6 +247,18 @@ end
 
     @test my_object.my_sub_object.my_scalar_2 == 3.0
 
+    # create with global client
+    global_graphql_client(client)
+    my_sub_object = GraphQLClient.create_introspected_struct(
+        "MySubObject",
+        Dict("my_scalar_2" => 3.0)
+    )
+    my_object = GraphQLClient.create_introspected_struct(
+        "MyObject",
+        Dict("my_scalar" => "string", "my_sub_object" => my_sub_object)
+    )
+    @test my_object.my_sub_object.my_scalar_2 == 3.0
+
     # Only can create for mutable
     GraphQLClient.introspect_object(client, "MyObject"; force=true, mutable=false)
 

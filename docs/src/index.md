@@ -38,7 +38,7 @@ This will, by default, use a query to introspect the server schema, populating
 several fields of the `Client` object which can then be used to help with
 querying.
 
-We can set a global client to be used by [`query`](@ref), [`mutate`](@ref), [`open_subscription`](@ref) and [`GraphQLClient.execute`](@ref).
+We can also set a global client to be user by queries, mutations, subscriptions and introspection functions.
 
 ```jldoctest client_intro
 julia> global_graphql_client(Client("https://countries.trevorblades.com"))
@@ -69,6 +69,9 @@ end
 Now we have a `Client` object, we can query it without having to type a full
 GraphQL query by hand (note, you should be able to test these queries for yourself,
 thanks to [https://github.com/trevorblades/countries](https://github.com/trevorblades/countries)).
+
+!!! info "Using the global `Client`"
+    In these examples, if the `client` argument is omitted, the global client will be used instead.
 
 ```julia-repl
 julia> response = query(client, "countries")

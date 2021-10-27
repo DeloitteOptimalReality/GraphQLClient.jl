@@ -44,6 +44,12 @@ client = Client("https://countries.trevorblades.com")
 
 This will, by default, use a query to introspect the server schema.
 
+We can also set a global client to be user by queries, mutations, subscriptions and introspection functions.
+
+```julia
+global_graphql_client(Client("https://countries.trevorblades.com"))
+```
+
 ### Querying
 
 We can query a `client` without having to type a full GraphQL query by hand, with the response containing fields obtained by introspection
@@ -52,11 +58,17 @@ We can query a `client` without having to type a full GraphQL query by hand, wit
 response = query(client, "countries")
 ```
 
-We can add arguments and speciy fields in the response
+Or we can query the global client
+
+```julia
+response = query("countries")
+```
+
+We can add arguments and specify fields in the response
 
 ```julia
 query_args = Dict("filter" => Dict("code" => Dict("eq" => "AU")))
-response = query(client, "countries"; query_args=query_args, output_fields="name");
+response = query("countries"; query_args=query_args, output_fields="name");
 response.data["countries"]
 # 1-element Vector{Any}:
 #  Dict{String, Any}("name" => "Australia")
@@ -83,7 +95,7 @@ query_string = """
 
 variables = Dict("eq" => "AU")
 
-response = GraphQLClient.execute(client, query_string, variables=variables)
+response = GraphQLClient.execute(query_string, variables=variables)
 ```
 
 
@@ -97,7 +109,7 @@ struct CountryName
 end
 StructTypes.StructType(::Type{CountryName}) = StructTypes.OrderedStruct()
 
-response = query(client, "countries", Vector{CountryName}, query_args=query_args, output_fields="name")
+response = query("countries", Vector{CountryName}, query_args=query_args, output_fields="name")
 
 response.data["countries"][1]
 # CountryName("Australia")
@@ -106,9 +118,9 @@ response.data["countries"][1]
 Or we can use introspection to build the type automatically
 
 ```julia
-Country = GraphQLClient.introspect_object(client, "Country")
+Country = GraphQLClient.introspect_object("Country")
 
-response = query(client, "countries", Vector{Country}, query_args=query_args, output_fields="name")
+response = query("countries", Vector{Country}, query_args=query_args, output_fields="name")
 
 response.data["countries"][1]
 # Country
@@ -122,6 +134,7 @@ a mutation is doing something with an input. For example
 
 ```julia
 response = mutate(client, "mutation_name", Dict("new_id" => 1))
+response = mutate("mutation_name", Dict("new_id" => 1)) # Use global client
 ```
 
 

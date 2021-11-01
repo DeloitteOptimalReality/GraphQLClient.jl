@@ -124,7 +124,7 @@ get_output_str(output::Alias) = "$output,"
 function get_output_str(output::Dict)
     str = ""
     for (key, val) in output
-        str = "$key{"
+        str *= "$key{"
         str *= get_output_str(val)
         str *= "},"
     end

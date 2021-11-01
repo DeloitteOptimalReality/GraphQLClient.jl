@@ -149,3 +149,25 @@ end
     @test GraphQLClient.get_all_output_fields_str(client, query_name, []) == "field1,"
     @test_logs (:warn, Regex("Can't query all output fields due to recursion of these object\\(s\\):")) GraphQLClient.get_all_output_fields_str(client, query_name, [])
 end
+
+@testset "issue #7" begin
+    output_fields=[
+        Dict(
+            "level1" =>Dict(
+                "level2" => Dict(
+                    "level3" => Dict(
+                        "level4_1" => [
+                            "level4_1_1",
+                        ],
+                        "level4_2" => [
+                            "level4_2_1",
+                        ],
+                    ) 
+                )
+            )
+        )
+    ]
+    output_str = GraphQLClient.get_output_str(output_fields)
+    @test occursin("level4_1{level4_1_1,}" , output_str)
+    @test occursin("level4_2{level4_2_1,}" , output_str)
+end

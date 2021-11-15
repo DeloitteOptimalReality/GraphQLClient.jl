@@ -84,3 +84,15 @@ GraphQLClient.GQLResponse{Any}
   data: Dict{String, Any}
           countries: Vector{Any}
 ```
+
+## `gql` non-standard string literal
+
+GraphQLClient provides the [`@gql_str`](@ref) macro which can be used to generate query strings by prepending a `String` with `gql`.
+
+```julia-repl
+julia> str = gql"query($code: ID!){country(code:$code){name}}"
+"query(\$code: ID!){country(code:\$code){name}}"
+```
+
+In future this will perform some validation on the string, but currently the main advantage of using this is it removes the need to escape `$` characters, as in the example above.
+In future this will perform some validation on the string, but currently the main advantage of using this is it removes the need to escape `$` characters, as in the example above.

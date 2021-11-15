@@ -7,7 +7,8 @@ using StructTypes
 export query, mutate, open_subscription, Client, GQLEnum, Alias,
     full_introspection!, get_queries, get_mutations, get_subscriptions,
     introspect_object, get_introspected_type, initialise_introspected_struct,
-    create_introspected_struct, list_all_introspected_objects, global_graphql_client
+    create_introspected_struct, list_all_introspected_objects, global_graphql_client,
+    @gql_str
 
 # Types
 include("client.jl")
@@ -26,5 +27,6 @@ include("queries.jl")
 include("mutations.jl")
 include("subscriptions.jl")
 include("introspection.jl")
+include("gql_string.jl")
 
 end # module

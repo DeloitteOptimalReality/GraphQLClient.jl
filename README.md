@@ -74,17 +74,17 @@ response.data["countries"]
 #  Dict{String, Any}("name" => "Australia")
 ```
 
-Or we can query with the query string directly
+Or we can query with the query string directly using either a normal `String` or the `gql` [non-standard string literal](https://docs.julialang.org/en/v1/manual/strings/#non-standard-string-literals):
 
 ```julia
-query_string = """
+query_string = gql"""
     query(
-      \$eq: String
+      $eq: String
     ){
     countries(
         filter:{
             code:{
-                eq:\$eq
+                eq:$eq
             }
         }
     ){

@@ -19,6 +19,8 @@ in `client.headers.`/`headers`.
 - `retries=1`: number of times to retry.
 - `readtimeout=0`: close the connection if no data is received for this many seconds.
     Use `readtimeout = 0` to disable.
+- `operation_name=""`: name of operation to execute. Must be supplied if more than one operation in
+    query. Empty `String` is equal to no name supplied.
 - `throw_on_execution_error=false`: set to `true` to throw an exception if the GraphQL
     server response contains errors that occurred during execution. Otherwise, errors
     can be found in the error field of the return value.
@@ -54,18 +56,25 @@ julia> GraphQLClient.execute(
 GraphQLClient.GQLResponse{Any}
   data: Dict{String, Any}
       country: Dict{String, Any}
+
+julia> query_string = \"\"\"
+           query getCountries{countries{name}}
+           query getLanguages{languages{name}}
+       \"\"\"
+
+julia> GraphQLClient.execute(client, query_string, operation_name="getCountries")
 ```
 """
 execute(query::AbstractString, output_type::Type{T}=Any; kwargs...) where T = execute(global_graphql_client(), query, output_type; kwargs...)
-function execute(client::Client, query::AbstractString, output_type::Type{T}=Any; variables=Dict(), kwargs...) where T
-    return execute(client, Dict("query" => query, "variables" => variables), output_type; kwargs...)
+function execute(client::Client, query::AbstractString, output_type::Type{T}=Any; variables=Dict(), operation_name="", kwargs...) where T
+    return execute(client, Dict("query" => query, "variables" => variables, "operationName" => operation_name), output_type; kwargs...)
 end
 execute(payload::AbstractDict, output_type::Type{T}=Any; kwargs...) where T  = execute(global_graphql_client(), payload, output_type; kwargs...)
 function execute(client::Client, payload::AbstractDict, output_type::Type{T}=Any; kwargs...) where T
     return execute(client.endpoint, payload, client.headers, output_type; kwargs...)
 end
-function execute(endpoint::AbstractString, query::AbstractString, headers::AbstractDict=Dict(), output_type::Type{T}=Any; variables=Dict(), kwargs...) where T
-    return execute(endpoint, Dict("query" => query, "variables" => variables), headers, output_type; kwargs...)
+function execute(endpoint::AbstractString, query::AbstractString, headers::AbstractDict=Dict(), output_type::Type{T}=Any; variables=Dict(), operation_name="", kwargs...) where T
+    return execute(endpoint, Dict("query" => query, "variables" => variables, "operationName" => operation_name), headers, output_type; kwargs...)
 end
 function execute(endpoint::AbstractString, payload::AbstractDict, headers::AbstractDict=Dict(), output_type::Type{T}=Any; kwargs...) where T
     return _execute(endpoint, JSON3.write(payload), headers, output_type; kwargs...)
@@ -88,6 +97,7 @@ function _execute(endpoint::AbstractString,
                   output_type::Type{T}=Any;
                   retries=1,
                   readtimeout=0,
+                  operation_name=nothing,
                   throw_on_execution_error=false)::GQLResponse{T} where T
 
     headers = merge(Dict("Content-Type" => "application/json"), headers)

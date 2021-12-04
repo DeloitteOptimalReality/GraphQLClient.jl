@@ -1,6 +1,6 @@
 # Low Level Execution
 
-If required, it is possible to define operation strings manually and execute them using either a `Client` or a URL. The following code blocks shows  methods with which this can be performed.
+If required, it is possible to define operation strings manually and execute them using either a `Client` or a URL. The following code blocks shows methods with which this can be performed.
 
 HTTP retrying and server runtime execution handling are controlled by keyword arguments in the same was as `query` and `mutate`. See [`GraphQLClient.execute`](@ref) for further details.
 ## Using a URL Directly
@@ -23,6 +23,23 @@ julia> GraphQLClient.execute("https://countries.trevorblades.com", "query(\$code
 GraphQLClient.GQLResponse{Any}
   data: Dict{String, Any}
           country: Dict{String, Any}
+
+julia> # Using URL, query string and operation_name kwarg
+
+julia> query_string = """
+           query getCountries{countries{name}}
+           query getLanguages{languages{name}}
+       """;
+
+julia> GraphQLClient.execute("https://countries.trevorblades.com", query_string, operation_name="getCountries")
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          countries: Vector{Any}
+
+julia> GraphQLClient.execute("https://countries.trevorblades.com", query_string, operation_name="getLanguages")
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          languages: Vector{Any}
 
 julia> # Using URL and supplying payload dictionary
 
@@ -56,4 +73,14 @@ julia> GraphQLClient.execute(client, payload)
 GraphQLClient.GQLResponse{Any}
   data: Dict{String, Any}
           country: Dict{String, Any}
+
+julia> query_string = """
+           query getCountries{countries{name}}
+           query getLanguages{languages{name}}
+       """;
+
+julia> GraphQLClient.execute(client, query_string, operation_name="getCountries")
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          countries: Vector{Any}
 ```

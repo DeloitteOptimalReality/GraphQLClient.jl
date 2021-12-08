@@ -9,6 +9,7 @@ What is GraphQL? It is a *"query language for APIs and a runtime for fulfilling 
 ## Key Features of GraphQLClient
 
 - **Querying**, **mutating** and **subscribing** without manual writing of query strings
+- `@gql_str` non-standard string literal which **validates a query string at compile time**
 - Deserializing responses directly using **StructTypes**
 - Type stable querying
 - **Construction of Julia types** from GraphQL objects
@@ -66,12 +67,33 @@ DocTestSetup = quote
 end
 ```
 
-Now we have a `Client` object, we can query it without having to type a full
-GraphQL query by hand (note, you should be able to test these queries for yourself,
-thanks to [https://github.com/trevorblades/countries](https://github.com/trevorblades/countries)).
-
 !!! info "Using the global `Client`"
     In these examples, if the `client` argument is omitted, the global client will be used instead.
+
+Now we have a `Client` object, we can query it with just a string
+
+```jldoctest
+julia> response = GraphQLClient.execute("{countries{name}}")
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          countries: Vector{Any}
+```
+
+Or we can use the [`@gql_str`](@ref) macro to perform some validation on the string first (at compile time)
+
+```jldoctest
+julia> str = gql"{countries{name}}"
+"{countries{name}}"
+
+julia> response = GraphQLClient.execute(str)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          countries: Vector{Any}
+```
+
+Or we can query without having to type a full GraphQL query by hand at all!
+(Note, you should be able to test these queries for yourself, thanks to [https://github.com/trevorblades/countries](https://github.com/trevorblades/countries)).
+
 
 ```julia-repl
 julia> response = query(client, "countries")

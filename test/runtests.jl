@@ -1,4 +1,5 @@
 using GraphQLClient
+using GraphQLParser
 using HTTP
 using JSON3
 using StructTypes

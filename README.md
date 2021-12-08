@@ -13,6 +13,7 @@ This package is intended to make connecting to and communicating with GraphQL se
 ## Key Features
 
 - **Querying**, **mutating** and **subscribing** without manual writing of query strings
+- `@gql_str` non-standard string literal which which **validates a query string at compile time** 
 - Deserializing responses directly using **StructTypes**
 - Type stable querying
 - **Construction of Julia types** from GraphQL objects
@@ -74,7 +75,7 @@ response.data["countries"]
 #  Dict{String, Any}("name" => "Australia")
 ```
 
-Or we can query with the query string directly using either a normal `String` or the `gql` [non-standard string literal](https://docs.julialang.org/en/v1/manual/strings/#non-standard-string-literals):
+Or we can query with the query string directly using either a normal `String` or the `gql` [non-standard string literal](https://docs.julialang.org/en/v1/manual/strings/#non-standard-string-literals) which also performs some validation of the string:
 
 ```julia
 query_string = gql"""

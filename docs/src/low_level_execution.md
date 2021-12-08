@@ -94,5 +94,19 @@ julia> str = gql"query($code: ID!){country(code:$code){name}}"
 "query(\$code: ID!){country(code:\$code){name}}"
 ```
 
-In future this will perform some validation on the string, but currently the main advantage of using this is it removes the need to escape `$` characters, as in the example above.
-In future this will perform some validation on the string, but currently the main advantage of using this is it removes the need to escape `$` characters, as in the example above.
+By default this performs some validation on the string, as per [GraphQLParser.jl](https://github.com/mmiller-max/GraphQLParser.jl).
+Validation errors can be turned off by using the second argument to the macro.
+
+```julia-repl
+julia> str = gql"query($code: ID!, $code: ID!){country(code:$code){name}}"
+ERROR: LoadError: Validation Failed
+
+GraphQLParser.RepeatedVariableDefinition
+      message: There can only be one variable named "code".
+     location: Line 1 Column 6
+
+# Use second argument to turn off error (requires full macro form and escaping of $s)
+julia> str = @gql_str "query(\$code: ID!, \$code: ID!){country(code:\$code){name}}" false
+"query(\$code: ID!, \$code: ID!){country(code:\$code){name}}"
+```
+```

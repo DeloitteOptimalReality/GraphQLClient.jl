@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Low Level Execution · GraphQLClient.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link rel="canonical" href="https://deloittedigitalapac.github.io/GraphQLClient.jl/stable/low_level_execution/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">GraphQLClient.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../client/">Client</a></li><li><a class="tocitem" href="../operations/">Operations</a></li><li><a class="tocitem" href="../struct_types_usage/">Struct Types Usage</a></li><li><a class="tocitem" href="../type_introspection/">Type Introspection</a></li><li class="is-active"><a class="tocitem" href>Low Level Execution</a><ul class="internal"><li><a class="tocitem" href="#Using-a-URL-Directly"><span>Using a URL Directly</span></a></li><li><a class="tocitem" href="#Using-a-Client"><span>Using a <code>Client</code></span></a></li><li><a class="tocitem" href="#gql-non-standard-string-literal"><span><code>gql</code> non-standard string literal</span></a></li></ul></li><li><a class="tocitem" href="../limitations/">Current Limitations</a></li></ul></li><li><span class="tocitem">Library</span><ul><li><a class="tocitem" href="../public/">Public</a></li><li><a class="tocitem" href="../private/">Private</a></li></ul></li><li><a class="tocitem" href="../contributing/">Contributing</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manual</a></li><li class="is-active"><a href>Low Level Execution</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Low Level Execution</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/DeloitteDigitalAPAC/GraphQLClient.jl/blob/master/docs/src/low_level_execution.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Low-Level-Execution"><a class="docs-heading-anchor" href="#Low-Level-Execution">Low Level Execution</a><a id="Low-Level-Execution-1"></a><a class="docs-heading-anchor-permalink" href="#Low-Level-Execution" title="Permalink"></a></h1><p>If required, it is possible to define operation strings manually and execute them using either a <code>Client</code> or a URL. The following code blocks shows methods with which this can be performed.</p><p>HTTP retrying and server runtime execution handling are controlled by keyword arguments in the same was as <code>query</code> and <code>mutate</code>. See <a href="../public/#GraphQLClient.execute"><code>GraphQLClient.execute</code></a> for further details.</p><h2 id="Using-a-URL-Directly"><a class="docs-heading-anchor" href="#Using-a-URL-Directly">Using a URL Directly</a><a id="Using-a-URL-Directly-1"></a><a class="docs-heading-anchor-permalink" href="#Using-a-URL-Directly" title="Permalink"></a></h2><p>These methods except the <code>header</code> keyword argument to set HTTP headers, with the <code>Content-Type</code> being set to <code>&quot;application/json&quot;</code> if none is supplied.</p><pre><code class="language-julia-repl hljs">julia&gt; # Using URL and query string
+
+julia&gt; GraphQLClient.execute(&quot;https://countries.trevorblades.com&quot;, &quot;query{country(code:\&quot;BR\&quot;){name}}&quot;)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          country: Dict{String, Any}
+
+julia&gt; # Using URL, query string and variables kwarg
+
+julia&gt; variables = Dict(&quot;code&quot; =&gt; &quot;BR&quot;);
+
+julia&gt; GraphQLClient.execute(&quot;https://countries.trevorblades.com&quot;, &quot;query(\$code: ID!){country(code:\$code){name}}&quot;; variables)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          country: Dict{String, Any}
+
+julia&gt; # Using URL, query string and operation_name kwarg
+
+julia&gt; query_string = &quot;&quot;&quot;
+           query getCountries{countries{name}}
+           query getLanguages{languages{name}}
+       &quot;&quot;&quot;;
+
+julia&gt; GraphQLClient.execute(&quot;https://countries.trevorblades.com&quot;, query_string, operation_name=&quot;getCountries&quot;)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          countries: Vector{Any}
+
+julia&gt; GraphQLClient.execute(&quot;https://countries.trevorblades.com&quot;, query_string, operation_name=&quot;getLanguages&quot;)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          languages: Vector{Any}
+
+julia&gt; # Using URL and supplying payload dictionary
+
+julia&gt; payload = Dict(&quot;query&quot; =&gt; &quot;query(\$code: ID!){country(code:\$code){name}}&quot;, &quot;variables&quot; =&gt; variables);
+
+julia&gt; GraphQLClient.execute(&quot;https://countries.trevorblades.com&quot;, payload)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          country: Dict{String, Any}
+</code></pre><h2 id="Using-a-Client"><a class="docs-heading-anchor" href="#Using-a-Client">Using a <code>Client</code></a><a id="Using-a-Client-1"></a><a class="docs-heading-anchor-permalink" href="#Using-a-Client" title="Permalink"></a></h2><p>These methods use <code>Client.headers</code> as the HTTP headers, with the <code>Content-Type</code> being set to <code>&quot;application/json&quot;</code> if none is supplied.</p><pre><code class="language-julia-repl hljs">julia&gt; client = Client(&quot;https://countries.trevorblades.com&quot;);
+
+julia&gt; GraphQLClient.execute(client, &quot;query{country(code:\&quot;BR\&quot;){name}}&quot;)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          country: Dict{String, Any}
+
+julia&gt; GraphQLClient.execute(client, &quot;query(\$code: ID!){country(code:\$code){name}}&quot;; variables)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          country: Dict{String, Any}
+
+julia&gt; GraphQLClient.execute(client, payload)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          country: Dict{String, Any}
+
+julia&gt; query_string = &quot;&quot;&quot;
+           query getCountries{countries{name}}
+           query getLanguages{languages{name}}
+       &quot;&quot;&quot;;
+
+julia&gt; GraphQLClient.execute(client, query_string, operation_name=&quot;getCountries&quot;)
+GraphQLClient.GQLResponse{Any}
+  data: Dict{String, Any}
+          countries: Vector{Any}</code></pre><h2 id="gql-non-standard-string-literal"><a class="docs-heading-anchor" href="#gql-non-standard-string-literal"><code>gql</code> non-standard string literal</a><a id="gql-non-standard-string-literal-1"></a><a class="docs-heading-anchor-permalink" href="#gql-non-standard-string-literal" title="Permalink"></a></h2><p>GraphQLClient provides the <a href="../public/#GraphQLClient.@gql_str"><code>@gql_str</code></a> macro which can be used to generate query strings by prepending a <code>String</code> with <code>gql</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; str = gql&quot;query($code: ID!){country(code:$code){name}}&quot;
+&quot;query(\$code: ID!){country(code:\$code){name}}&quot;</code></pre><p>By default this performs some validation on the string, as per <a href="https://github.com/mmiller-max/GraphQLParser.jl">GraphQLParser.jl</a>. Validation errors can be turned off by using the second argument to the macro.</p><pre><code class="language-julia-repl hljs">julia&gt; str = gql&quot;query($code: ID!, $code: ID!){country(code:$code){name}}&quot;
+ERROR: LoadError: Validation Failed
+
+GraphQLParser.RepeatedVariableDefinition
+      message: There can only be one variable named &quot;code&quot;.
+     location: Line 1 Column 6
+
+# Use second argument to turn off error (requires full macro form and escaping of $s)
+julia&gt; str = @gql_str &quot;query(\$code: ID!, \$code: ID!){country(code:\$code){name}}&quot; false
+&quot;query(\$code: ID!, \$code: ID!){country(code:\$code){name}}&quot;</code></pre><p>```</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../type_introspection/">« Type Introspection</a><a class="docs-footer-nextpage" href="../limitations/">Current Limitations »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.10 on <span class="colophon-date" title="Friday 17 December 2021 20:37">Friday 17 December 2021</span>. Using Julia version 1.7.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

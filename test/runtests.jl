@@ -1,4 +1,5 @@
 using GraphQLClient
+using GraphQLParser
 using HTTP
 using JSON3
 using StructTypes
@@ -17,4 +18,5 @@ include("utils.jl")
     @testset "Subscriptions" begin include("subscriptions.jl") end
     @testset "HTTP Execution" begin include("http_execution.jl") end
     @testset "Type Construction" begin include("type_construction.jl") end
+    @testset "GQL String" begin include("gql_string.jl") end
 end

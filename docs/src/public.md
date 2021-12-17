@@ -27,6 +27,7 @@ GraphQLClient.execute
 GraphQLClient.GQLResponse
 GraphQLClient.GQLEnum
 GraphQLClient.Alias
+@gql_str
 ```
 
 ## Type Introspection

@@ -84,3 +84,29 @@ GraphQLClient.GQLResponse{Any}
   data: Dict{String, Any}
           countries: Vector{Any}
 ```
+
+## `gql` non-standard string literal
+
+GraphQLClient provides the [`@gql_str`](@ref) macro which can be used to generate query strings by prepending a `String` with `gql`.
+
+```julia-repl
+julia> str = gql"query($code: ID!){country(code:$code){name}}"
+"query(\$code: ID!){country(code:\$code){name}}"
+```
+
+By default this performs some validation on the string, as per [GraphQLParser.jl](https://github.com/mmiller-max/GraphQLParser.jl).
+Validation errors can be turned off by using the second argument to the macro.
+
+```julia-repl
+julia> str = gql"query($code: ID!, $code: ID!){country(code:$code){name}}"
+ERROR: LoadError: Validation Failed
+
+GraphQLParser.RepeatedVariableDefinition
+      message: There can only be one variable named "code".
+     location: Line 1 Column 6
+
+# Use second argument to turn off error (requires full macro form and escaping of $s)
+julia> str = @gql_str "query(\$code: ID!, \$code: ID!){country(code:\$code){name}}" false
+"query(\$code: ID!, \$code: ID!){country(code:\$code){name}}"
+```
+```

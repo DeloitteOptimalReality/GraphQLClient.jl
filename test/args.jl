@@ -57,6 +57,8 @@ end
     ])
     str, arg_names = GraphQLClient.get_query_args_str(args)
     @test length(unique(vcat(collect(values(arg_names["vec"][1])), collect(values(arg_names["vec"][2]))))) == 4 # four unique names
+    @test all(key -> occursin(key, str), keys(arg_names["vec"][1]))  # Check all arg_names are in str
+    @test all(key -> occursin(key, str), keys(arg_names["vec"][2]))  # Check all arg_names are in str
 
     # Different fields with same keys
     args = Dict(

@@ -84,7 +84,7 @@ function get_query_args_str(args::AbstractDict)
                 end
                 if enumerate > 0
                     name = fieldname * "__" * string(enumerate)
-                    str *= string(enumerate)
+                    str *= "__" *string(enumerate)
                 end
 
                 # Add to tracker

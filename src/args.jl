@@ -44,16 +44,16 @@ julia> print(prettify_query(str))
     A:\$A
     C:[
         {
-            D:\$D1
-            E:\$E1
+            D:\$D__1
+            E:\$E__1
         }
         {
-            D:\$D2
-            E:\$E2
+            D:\$D__2
+            E:\$E__2
         }
         {
-            D:\$D3
-            E:\$E3
+            D:\$D__3
+            E:\$E__3
         }
     ]
 )

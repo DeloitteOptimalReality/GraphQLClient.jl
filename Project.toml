@@ -1,6 +1,6 @@
 name = "GraphQLClient"
 uuid = "09d831e3-9c21-47a9-bfd8-076871817219"
-version = "0.7.4"
+version = "0.7.5"
 
 [deps]
 GraphQLParser = "0ae10fbf-af58-4883-b66b-ff0ac82d20dd"

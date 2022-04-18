@@ -13,6 +13,7 @@ makedocs(
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://deloittedigitalapac.github.io/GraphQLClient.jl/stable",
     ),
+    strict=:doctest,
     pages=[
         "Home" => "index.md",
         "Manual" => [

@@ -66,14 +66,14 @@ julia> GraphQLClient.execute(client, query_string, operation_name="getCountries"
 ```
 """
 execute(query::AbstractString, output_type::Type{T}=Any; kwargs...) where T = execute(global_graphql_client(), query, output_type; kwargs...)
-function execute(client::Client, query::AbstractString, output_type::Type{T}=Any; variables=Dict(), operation_name="", kwargs...) where T
+function execute(client::Client, query::AbstractString, output_type::Type{T}=Any; variables=Dict(), operation_name=nothing, kwargs...) where T
     return execute(client, Dict("query" => query, "variables" => variables, "operationName" => operation_name), output_type; kwargs...)
 end
 execute(payload::AbstractDict, output_type::Type{T}=Any; kwargs...) where T  = execute(global_graphql_client(), payload, output_type; kwargs...)
 function execute(client::Client, payload::AbstractDict, output_type::Type{T}=Any; kwargs...) where T
     return execute(client.endpoint, payload, client.headers, output_type; kwargs...)
 end
-function execute(endpoint::AbstractString, query::AbstractString, headers::AbstractDict=Dict(), output_type::Type{T}=Any; variables=Dict(), operation_name="", kwargs...) where T
+function execute(endpoint::AbstractString, query::AbstractString, headers::AbstractDict=Dict(), output_type::Type{T}=Any; variables=Dict(), operation_name=nothing, kwargs...) where T
     return execute(endpoint, Dict("query" => query, "variables" => variables, "operationName" => operation_name), headers, output_type; kwargs...)
 end
 function execute(endpoint::AbstractString, payload::AbstractDict, headers::AbstractDict=Dict(), output_type::Type{T}=Any; kwargs...) where T

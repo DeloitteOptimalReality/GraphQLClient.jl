@@ -145,7 +145,7 @@ end
         output_fields="field",
         subtimeout=0.1)
     @test val[] == 2
-#=
+
     # Error response - not throwing
     port = 8093
     send_error_localhost("This failed", port)
@@ -205,5 +205,5 @@ end
     @test results[1] isa GraphQLClient.GQLResponse{Response}
     @test isnothing(results[1].errors)
     @test !isnothing(results[1].data) # No point testing content as we've coded it in the test function
-    =#
+
 end

@@ -105,8 +105,8 @@ function open_subscription(fn::Function,
         "payload" => payload
     )
     message_str = JSON3.write(message)
-
-    HTTP.WebSockets.open(client.ws_endpoint; retry=retry, headers=client.headers) do ws
+    throw_if_assigned = Ref{GraphQLClientException}()
+    HTTP.WebSockets.open(client.ws_endpoint; retry=retry, headers=client.headers, suppress_close_error=false) do ws
         # Start sub
         output_info(verbose) && println("Starting $(get_name(subscription_name)) subscription with ID $sub_id")
         writews(ws, message_str)
@@ -132,11 +132,13 @@ function open_subscription(fn::Function,
                 output_info(verbose) && println("Subscription $sub_id stopped by the stop function supplied")
                 break
             end
-            response = JSON3.read(data::Vector{UInt8}, GQLSubscriptionResponse{output_type})
+            # Dropping typeassert as this may be string
+            response = JSON3.read(data, GQLSubscriptionResponse{output_type})
             payload = response.payload
             if !isnothing(payload.errors) && !isempty(payload.errors) && throw_on_execution_error
                 subscription_tracker[][sub_id] = "errored"
-                throw(GraphQLError("Error during subscription.", payload))
+                throw_if_assigned[] = GraphQLError("Error during subscription.", payload)
+                break
             end
             # Handle multiple subs, do we need this?
             if response.id == string(sub_id)
@@ -149,6 +151,8 @@ function open_subscription(fn::Function,
             end
         end
     end
+    # We can't throw errors from the ws handle function in HTTP 1.0, as they get digested.
+    isassigned(throw_if_assigned) && throw(throw_if_assigned[])
     output_debug(verbose) && println("Finished. Closing subscription")
     subscription_tracker[][sub_id] = "closed"
     return

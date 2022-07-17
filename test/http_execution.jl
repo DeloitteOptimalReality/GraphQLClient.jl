@@ -17,8 +17,8 @@ end
 
     # handle_error
     @test_throws ArgumentError test_error_handler(GraphQLClient.handle_error, ArgumentError("msg"))
-    @test_throws HTTP.StatusError test_error_handler(GraphQLClient.handle_error, HTTP.StatusError(404, HTTP.Response(404;request=HTTP.Request(), body="{}")))
-    @test_throws GraphQLClient.GraphQLError test_error_handler(GraphQLClient.handle_error, HTTP.StatusError(400, HTTP.Response(400;request=HTTP.Request(), body="{}")))
+    @test_throws HTTP.StatusError test_error_handler(GraphQLClient.handle_error, HTTP.StatusError(404, "POST", "", HTTP.Response(404;request=HTTP.Request(), body="{}")))
+    @test_throws GraphQLClient.GraphQLError test_error_handler(GraphQLClient.handle_error, HTTP.StatusError(400, "POST", "", HTTP.Response(400;request=HTTP.Request(), body="{}")))
 
     # handle_deserialisation_error
     @test_throws MethodError test_error_handler(GraphQLClient.handle_deserialisation_error, MethodError(""), "", "")

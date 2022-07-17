@@ -132,7 +132,6 @@ function open_subscription(fn::Function,
                 output_info(verbose) && println("Subscription $sub_id stopped by the stop function supplied")
                 break
             end
-            # Dropping typeassert as this may be string
             response = JSON3.read(data, GQLSubscriptionResponse{output_type})
             payload = response.payload
             if !isnothing(payload.errors) && !isempty(payload.errors) && throw_on_execution_error

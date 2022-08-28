@@ -205,5 +205,4 @@ end
     @test results[1] isa GraphQLClient.GQLResponse{Response}
     @test isnothing(results[1].errors)
     @test !isnothing(results[1].data) # No point testing content as we've coded it in the test function
-
 end

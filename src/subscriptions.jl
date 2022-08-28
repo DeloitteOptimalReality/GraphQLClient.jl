@@ -196,7 +196,6 @@ function async_reader_with_stopfn(ws::HTTP.WebSockets.WebSocket, stopfn, checkti
     return ch
 end
 
-
 """
     readfromwebsocket(ws::IO, stopfn, subtimeout)
 

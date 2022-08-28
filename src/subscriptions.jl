@@ -1,17 +1,5 @@
 const subscription_tracker = Ref{Dict}(Dict())
 
-function writews(ws::HTTP.WebSockets.WebSocket, msg)
-    if isdefined(HTTP, :send)
-        HTTP.send(ws, msg)
-    else
-        write(ws, msg)
-    end
-end
-
-function writews(ws::IO, msg)
-    write(ws, msg)
-end
-
 """
     open_subscription(fn::Function,
                       [client::Client],
@@ -109,7 +97,7 @@ function open_subscription(fn::Function,
     HTTP.WebSockets.open(client.ws_endpoint; retry=retry, headers=client.headers, suppress_close_error=false) do ws
         # Start sub
         output_info(verbose) && println("Starting $(get_name(subscription_name)) subscription with ID $sub_id")
-        writews(ws, message_str)
+        HTTP.send(ws, message_str)
         subscription_tracker[][sub_id] = "open"
 
         # Init function
@@ -170,24 +158,6 @@ function clear_subscriptions()
     end
 end
 
-function async_reader_with_timeout(io::IO, subtimeout)::Channel
-    ch = Channel(1)
-    task = @async begin
-        reader_task = current_task()
-        function timeout_cb(timer)
-            put!(ch, :timeout)
-            Base.throwto(reader_task, InterruptException())
-        end
-        timeout = Timer(timeout_cb, subtimeout)
-        data = readavailable(io)
-        subtimeout > 0 && close(timeout) # Cancel the timeout
-        put!(ch, data)
-    end
-    bind(ch, task)
-    return ch
-end
-
-
 function async_reader_with_timeout(ws::HTTP.WebSocket, subtimeout)::Channel
     ch = Channel(1)
     task = @async begin
@@ -199,28 +169,6 @@ function async_reader_with_timeout(ws::HTTP.WebSocket, subtimeout)::Channel
         timeout = Timer(timeout_cb, subtimeout)
         data = HTTP.receive(ws)
         subtimeout > 0 && close(timeout) # Cancel the timeout
-        put!(ch, data)
-    end
-    bind(ch, task)
-    return ch
-end
-
-
-function async_reader_with_stopfn(io::IO, stopfn, checktime)::Channel
-    ch = Channel(1) # Could we make this channel concretely typed?
-    task = @async begin
-        reader_task = current_task()
-        function timeout_cb(timer)
-            if stopfn()
-                put!(ch, :stopfn)
-                Base.throwto(reader_task, InterruptException())
-            else
-                timeout = Timer(timeout_cb, checktime)
-            end
-        end
-        timeout = Timer(timeout_cb, checktime)
-        data = readavailable(io)
-        close(timeout) # Cancel the timeout
         put!(ch, data)
     end
     bind(ch, task)
@@ -265,20 +213,6 @@ A channel is returned with the data. If `stopfn` stops the websocket,
 the data will be `:stopfn`. If the timeout stops the websocket,
 the data will be `:timeout`
 """
-function readfromwebsocket(ws::IO, stopfn, subtimeout)
-    if isnothing(stopfn) && subtimeout > 0
-        ch_out = async_reader_with_timeout(ws, subtimeout)
-        data = take!(ch_out)
-    elseif !isnothing(stopfn)
-        checktime = subtimeout > 0 ? subtimeout : 2
-        ch_out = async_reader_with_stopfn(ws, stopfn, checktime)
-        data = take!(ch_out)
-    else
-        data = readavailable(ws)
-    end
-    return data
-end
-
 function readfromwebsocket(ws::HTTP.WebSockets.WebSocket, stopfn, subtimeout)
     if isnothing(stopfn) && subtimeout > 0
         ch_out = async_reader_with_timeout(ws, subtimeout)

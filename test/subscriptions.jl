@@ -3,7 +3,7 @@ function listen_localhost()
         if HTTP.WebSockets.isupgrade(http.message)
             HTTP.WebSockets.upgrade(http) do ws
                 for data in ws
-                    GraphQLClient.writews(ws, data)
+                    HTTP.send(ws, data)
                 end
             end
         end
@@ -30,7 +30,7 @@ end
         @test take!(ch) == :timeout
 
         ch = GraphQLClient.async_reader_with_timeout(ws, 5)
-        GraphQLClient.writews(ws, "Data")
+        HTTP.send(ws, "Data")
         @test String(take!(ch)) == "Data"
 
         # stopfn
@@ -43,11 +43,11 @@ end
         @test take!(ch) == :stopfn
         stop[] = false
         ch = GraphQLClient.async_reader_with_stopfn(ws, stopfn, 0.5)
-        GraphQLClient.writews(ws, "Data")
+        HTTP.send(ws, "Data")
         @test String(take!(ch)) == "Data"
 
         # readfromwebsocket - no timeout or stopfn
-        GraphQLClient.writews(ws, "Data")
+        HTTP.send(ws, "Data")
         @test String(GraphQLClient.readfromwebsocket(ws, nothing, 0)) == "Data"
 
         # readfromwebsocket - timeout
@@ -90,7 +90,7 @@ function send_error_localhost(message, port)
                         }
                     }
                     """
-                    GraphQLClient.writews(ws, error_payload)
+                    HTTP.send(ws, error_payload)
                 end
             end
         end
@@ -116,7 +116,7 @@ function send_data_localhost(sub_name, port)
                         }
                     }
                     """
-                    GraphQLClient.writews(ws, data_payload)
+                    HTTP.send(ws, data_payload)
                 end
             end
         end

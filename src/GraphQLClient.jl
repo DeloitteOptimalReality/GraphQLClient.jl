@@ -11,6 +11,7 @@ export query, mutate, open_subscription, Client, GQLEnum, Alias,
     create_introspected_struct, list_all_introspected_objects, global_graphql_client,
     @gql_str
 
+include("constants.jl")
 # Types
 include("client.jl")
 include("types.jl")

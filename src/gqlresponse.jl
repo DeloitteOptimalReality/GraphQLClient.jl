@@ -99,9 +99,9 @@ end
 Struct for subsriptions that wraps a `GQLReponse{T}` alongside various metadata.
 """
 struct GQLSubscriptionResponse{T}
-    id::String
+    id::Union{String, Nothing}
     type::String
-    payload::GQLResponse{T}
+    payload::Union{GQLResponse{T}, Nothing}
 end
 StructTypes.StructType(::Type{<:GQLSubscriptionResponse}) = StructTypes.Struct()
 

@@ -138,7 +138,7 @@ function open_subscription(fn::Function,
             end
         end
     end
-    # We can't throw errors from the ws handle function in HTTP 1.0, as they get digested.
+    # We can't throw errors from the ws handle function in HTTP.jl 1.0, as they get digested.
     isassigned(throw_if_assigned) && throw(throw_if_assigned[])
     output_debug(verbose) && println("Finished. Closing subscription")
     subscription_tracker[][sub_id] = "closed"

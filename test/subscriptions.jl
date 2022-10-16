@@ -1,10 +1,9 @@
 function listen_localhost()
     @async HTTP.listen(HTTP.Sockets.localhost, 8080) do http
-        if HTTP.WebSockets.is_upgrade(http.message)
+        if HTTP.WebSockets.isupgrade(http.message)
             HTTP.WebSockets.upgrade(http) do ws
-                while !eof(ws)
-                    data = readavailable(ws)
-                    write(ws, data)
+                for data in ws
+                    HTTP.send(ws, data)
                 end
             end
         end
@@ -13,10 +12,10 @@ end
 
 function do_nothing_localhost()
     @async HTTP.listen(HTTP.Sockets.localhost, 8081) do http
-        if HTTP.WebSockets.is_upgrade(http.message)
+        if HTTP.WebSockets.isupgrade(http.message)
             HTTP.WebSockets.upgrade(http) do ws
-                while !eof(ws)
-                    data = readavailable(ws)
+                for data in ws
+                    nothing;
                 end
             end
         end
@@ -31,7 +30,7 @@ end
         @test take!(ch) == :timeout
 
         ch = GraphQLClient.async_reader_with_timeout(ws, 5)
-        write(ws, "Data")
+        HTTP.send(ws, "Data")
         @test String(take!(ch)) == "Data"
 
         # stopfn
@@ -44,11 +43,11 @@ end
         @test take!(ch) == :stopfn
         stop[] = false
         ch = GraphQLClient.async_reader_with_stopfn(ws, stopfn, 0.5)
-        write(ws, "Data")
+        HTTP.send(ws, "Data")
         @test String(take!(ch)) == "Data"
 
         # readfromwebsocket - no timeout or stopfn
-        write(ws, "Data")
+        HTTP.send(ws, "Data")
         @test String(GraphQLClient.readfromwebsocket(ws, nothing, 0)) == "Data"
 
         # readfromwebsocket - timeout
@@ -70,10 +69,9 @@ end
 
 function send_error_localhost(message, port)
     @async HTTP.listen(HTTP.Sockets.localhost, port) do http
-        if HTTP.WebSockets.is_upgrade(http.message)
+        if HTTP.WebSockets.isupgrade(http.message)
             HTTP.WebSockets.upgrade(http) do ws
-                while !eof(ws)
-                    data = readavailable(ws)
+                for data in ws
                     isempty(data) && continue
                     query = JSON3.read(data)
                     error_payload = """
@@ -92,7 +90,7 @@ function send_error_localhost(message, port)
                         }
                     }
                     """
-                    write(ws, error_payload)
+                    HTTP.send(ws, error_payload)
                 end
             end
         end
@@ -101,10 +99,9 @@ end
 
 function send_data_localhost(sub_name, port)
     @async HTTP.listen(HTTP.Sockets.localhost, port) do http
-        if HTTP.WebSockets.is_upgrade(http.message)
+        if HTTP.WebSockets.isupgrade(http.message)
             HTTP.WebSockets.upgrade(http) do ws
-                while !eof(ws)
-                    data = readavailable(ws)
+                for data in ws
                     isempty(data) && continue
                     query = JSON3.read(data)
                     data_payload = """
@@ -119,7 +116,7 @@ function send_data_localhost(sub_name, port)
                         }
                     }
                     """
-                    write(ws, data_payload)
+                    HTTP.send(ws, data_payload)
                 end
             end
         end

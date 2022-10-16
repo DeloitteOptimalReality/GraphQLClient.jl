@@ -17,3 +17,16 @@ const SUBSCRIPTION_STATUS_OPEN = "open"
 const SUBSCRIPTION_STATUS_ERROR = "errored"
 const SUBSCRIPTION_STATUS_CLOSED = "closed"
 
+# New GQL over WS constanst
+# https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
+
+const GQLWS_CLIENT_INIT = "connection_init"
+const GQLWS_SERVER_CONNECTION_ACK = "connection_ack"
+const GQLWS_BI_PING = "ping"
+const GQLWS_BI_PONG = "pong"
+const GQLWS_CLIENT_SUBSCRIBE = "subscribe"
+const GQLWS_SERVER_NEXT = "next"
+const GQLWS_SERVER_ERROR = "error"
+const GQLWS_BI_COMPLETE = "complete"
+
+

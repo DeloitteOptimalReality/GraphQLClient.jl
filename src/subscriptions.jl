@@ -11,7 +11,8 @@ const subscription_tracker = Ref{Dict}(Dict())
                       retry=true,
                       subtimeout=0,
                       stopfn=nothing,
-                      throw_on_execution_error=false)
+                      throw_on_execution_error=false,
+                      websocket_protocol=join(", ", GQS_WS_PROTOCOLS))
 
 Subscribe to `subscription_name`, running `fn` on each received result and ending the
 subcription when `fn` returns `true`.
@@ -51,7 +52,12 @@ This function is designed to be used with the `do` keyword.
 - `throw_on_execution_error=false`: set to `true` to stop an error being thrown if the GraphQL server
     response contains errors that occurred during execution.
 - `verbose=0`: set to 1, 2 for extra logging.
-
+- `websocket_protocol=join(", ", GQL_WS_PROTOCOLS)`: Will try to communicate with [apollographql's
+    subcription-transport-protocol](https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md)
+    or with the newer [graphql-ws](https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md) protocol.
+    With the default setup, the protocol that is actually used, is selected by the server. If you want to
+    enforce the subprotocol, you can adjust this accordingly. The string constants `PROTOCOL_APOLLO_OLD`, `PROTOCOL_GRAPHQL_WS`
+    contain the names of the sub-protocols, respectively.
 # Examples
 ```julia
 julia> open_subscription("subSaveUser", sub_args=Dict("role" => "SYSTEM_ADMIN")) do result
@@ -78,12 +84,13 @@ function open_subscription(fn::Function,
                            subtimeout=0,
                            stopfn=nothing,
                            throw_on_execution_error=false,
-                           verbose=0)
+                           verbose=0,
+                           websocket_protocol=join(", ", PROTOCOL_GRAPHQL_WS))
 
     !in(get_name(subscription_name), get_subscriptions(client)) && throw(GraphQLError("$(get_name(subscription_name)) is not an existing subscription"))
 
     output_str = get_output_str(output_fields)
-    payload = get_generic_query_payload(client, "subscription", subscription_name, sub_args, output_str)
+    subscription_payload = get_generic_query_payload(client, "subscription", subscription_name, sub_args, output_str)
 
     sub_id = string(length(keys(subscription_tracker[])) + 1)
     sub_id *= "-" * string(Threads.threadid())
@@ -94,95 +101,46 @@ function open_subscription(fn::Function,
     # Defined here https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
     # TODO: Add support for the newer `graphql-transport-ws` from the graphql-ws library.
     # ()
-    headers["Sec-WebSocket-Protocol"] = "apollographql/subscriptions-transport-ws"
+    headers["Sec-WebSocket-Protocol"] = websocket_protocol
 
     HTTP.WebSockets.open(client.ws_endpoint; retry=retry, headers=headers) do ws
         # Start sub
         output_info(verbose) && println("Starting $(get_name(subscription_name)) subscription with ID $sub_id")
-        HTTP.send(ws, JSON3.write(Dict("id" => sub_id, "type" => GQL_CLIENT_CONNECTION_INIT)))
-        # Init function
-        if !isnothing(initfn)
-            output_debug(verbose) && println("Running subscription initialisation function")
-            initfn()
-        end
-
-        data = readfromwebsocket(ws, stopfn, subtimeout)
-        try checkreturn(data, verbose, sub_id)
-        catch e
-            e isa Interrupt && return
-        end
-        response = JSON3.read(data, GQLSubscriptionResponse{output_type})
-        while response.type == GQL_SERVER_CONNECTION_KEEP_ALIVE
-            data = readfromwebsocket(ws, stopfn, subtimeout)
-            try checkreturn(data, verbose, sub_id)
-            catch e
-                e isa Interrupt && return
-            end
-            response = JSON3.read(data, GQLSubscriptionResponse{output_type})
-        end
-        if response.type == GQL_SERVER_CONNECTION_ERROR && throw_on_execution_error
-            subscription_tracker[][sub_id] = SUBSCRIPTION_STATUS_ERROR
-            throw(GraphQLError("Error while establishing connection.", payload))
-        end
-
-        start_message = Dict(
-            "id" => string(sub_id), 
-            "type" => GQL_CLIENT_START, 
-            "payload" => payload
-        )
-        message_str = JSON3.write(start_message)
-        HTTP.send(ws, message_str)
-        subscription_tracker[][sub_id] = SUBSCRIPTION_STATUS_OPEN
-
-        # Get listening
-        output_debug(verbose) && println("Listening to $(get_name(subscription_name)) with ID $sub_id...")
-
-        # Run function
-        while true
-            data = readfromwebsocket(ws, stopfn, subtimeout)
-            try checkreturn(data, verbose, sub_id)
-            catch e
-                e isa Interrupt && break
-            end
-            # data = String(data)
-            # println(data)
-            response = JSON3.read(data, GQLSubscriptionResponse{output_type})
-
-            response.type == GQL_SERVER_CONNECTION_KEEP_ALIVE && continue
-            response.type == GQL_SERVER_COMPLETE              && break
-            response.type == GQL_SERVER_CONNECTION_ERROR      && begin
-                throw_if_assigned[] = GraphQLError("Error during subscription. Server reporeted connection error")
-                break
-            end
-            response.type == GQL_SERVER_ERROR                 && begin
-                throw_if_assigned[] = GraphQLError("Error during subscription - GQL_SERVER_ERROR.", response.payload)
-                break
-            end
-            # response.type == GQL_SERVER_DATA
-            payload = response.payload
-            if !isnothing(payload.errors) && !isempty(payload.errors) && throw_on_execution_error
-                subscription_tracker[][sub_id] = SUBSCRIPTION_STATUS_ERROR
-                throw_if_assigned[] = GraphQLError("Error during subscription.", payload)
-                break
-            end
-            # Handle multiple subs, do we need this?
-            if response.id == string(sub_id)
-                output_debug(verbose) && println("Result received on subscription with ID $sub_id")
-                finish = fn(payload)
-                if !isa(finish, Bool)
-                    subscription_tracker[][sub_id] = SUBSCRIPTION_STATUS_ERROR
-                    throw_if_assigned[] = ErrorException("Subscription function must return a boolean")
-                    break
-                end
-                if finish
-                    # Protocol says we need to let the server know we're unsubscribing
-                    output_debug(verbose) && println("Finished. Closing subscription")
-                    HTTP.send(ws, JSON3.write(Dict("id" => sub_id, "type" => GQL_CLIENT_STOP)))
-                    HTTP.send(ws, JSON3.write(Dict("id" => sub_id, "type" => GQL_CLIENT_CONNECTION_TERMINATE)))
-                    # close(ws)
-                    break
-                end
-            end
+        selected_protocol = HTTP.header(ws.response, "Sec-WebSocket-Protocol")
+        output_info(verbose) && println("Headers - $selected_protocol, $(join(' ', HTTP.headers(ws.response)))")
+        if selected_protocol == PROTOCOL_APOLLO_OLD
+            handle_apollo_old(
+                fn,
+                ws,
+                subscription_name,
+                subscription_payload,
+                sub_id,
+                output_type;
+                initfn=initfn,
+                subtimeout=subtimeout,
+                stopfn=stopfn,
+                throw_on_execution_error=throw_on_execution_error,
+                verbose=verbose,
+                throw_if_assigned_ref=throw_if_assigned
+            )
+        else
+            if selected_protocol != PROTOCOL_GRAPHQL_WS
+                @warn("None of the implemented protocols match - trying to use \"$(PROTOCOL_GRAPHQL_WS)\"")
+            end 
+            handle_graphql_ws(
+                fn,
+                ws,
+                subscription_name,
+                subscription_payload,
+                sub_id,
+                output_type;
+                initfn=initfn,
+                subtimeout=subtimeout,
+                stopfn=stopfn,
+                throw_on_execution_error=throw_on_execution_error,
+                verbose=verbose,
+                throw_if_assigned_ref=throw_if_assigned
+            )
         end
     end
     # We can't throw errors from the ws handle function in HTTP.jl 1.#, as they get digested.

@@ -94,7 +94,7 @@ function open_subscription(fn::Function,
     )
     message_str = JSON3.write(message)
     throw_if_assigned = Ref{GraphQLError}()
-    HTTP.WebSockets.open(client.ws_endpoint; retry=retry, headers=client.headers, suppress_close_error=false) do ws
+    HTTP.WebSockets.open(client.ws_endpoint; retry=retry, headers=client.headers) do ws
         # Start sub
         output_info(verbose) && println("Starting $(get_name(subscription_name)) subscription with ID $sub_id")
         HTTP.send(ws, message_str)

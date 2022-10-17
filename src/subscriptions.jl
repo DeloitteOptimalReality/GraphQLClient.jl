@@ -158,7 +158,7 @@ function clear_subscriptions()
     end
 end
 
-function async_reader_with_timeout(ws::HTTP.WebSocket, subtimeout)::Channel
+function async_reader_with_timeout(ws::HTTP.WebSockets.WebSocket, subtimeout)::Channel
     ch = Channel(1)
     task = @async begin
         reader_task = current_task()

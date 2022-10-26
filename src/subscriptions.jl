@@ -93,11 +93,11 @@ function open_subscription(fn::Function,
         "payload" => payload
     )
     message_str = JSON3.write(message)
-
+    throw_if_assigned = Ref{GraphQLError}()
     HTTP.WebSockets.open(client.ws_endpoint; retry=retry, headers=client.headers) do ws
         # Start sub
         output_info(verbose) && println("Starting $(get_name(subscription_name)) subscription with ID $sub_id")
-        write(ws, message_str)
+        HTTP.send(ws, message_str)
         subscription_tracker[][sub_id] = "open"
 
         # Init function
@@ -120,11 +120,12 @@ function open_subscription(fn::Function,
                 output_info(verbose) && println("Subscription $sub_id stopped by the stop function supplied")
                 break
             end
-            response = JSON3.read(data::Vector{UInt8}, GQLSubscriptionResponse{output_type})
+            response = JSON3.read(data, GQLSubscriptionResponse{output_type})
             payload = response.payload
             if !isnothing(payload.errors) && !isempty(payload.errors) && throw_on_execution_error
                 subscription_tracker[][sub_id] = "errored"
-                throw(GraphQLError("Error during subscription.", payload))
+                throw_if_assigned[] = GraphQLError("Error during subscription.", payload)
+                break
             end
             # Handle multiple subs, do we need this?
             if response.id == string(sub_id)
@@ -137,6 +138,8 @@ function open_subscription(fn::Function,
             end
         end
     end
+    # We can't throw errors from the ws handle function in HTTP.jl 1.0, as they get digested.
+    isassigned(throw_if_assigned) && throw(throw_if_assigned[])
     output_debug(verbose) && println("Finished. Closing subscription")
     subscription_tracker[][sub_id] = "closed"
     return
@@ -155,7 +158,7 @@ function clear_subscriptions()
     end
 end
 
-function async_reader_with_timeout(io::IO, subtimeout)::Channel
+function async_reader_with_timeout(ws::HTTP.WebSockets.WebSocket, subtimeout)::Channel
     ch = Channel(1)
     task = @async begin
         reader_task = current_task()
@@ -164,7 +167,7 @@ function async_reader_with_timeout(io::IO, subtimeout)::Channel
             Base.throwto(reader_task, InterruptException())
         end
         timeout = Timer(timeout_cb, subtimeout)
-        data = readavailable(io)
+        data = HTTP.receive(ws)
         subtimeout > 0 && close(timeout) # Cancel the timeout
         put!(ch, data)
     end
@@ -172,7 +175,7 @@ function async_reader_with_timeout(io::IO, subtimeout)::Channel
     return ch
 end
 
-function async_reader_with_stopfn(io::IO, stopfn, checktime)::Channel
+function async_reader_with_stopfn(ws::HTTP.WebSockets.WebSocket, stopfn, checktime)::Channel
     ch = Channel(1) # Could we make this channel concretely typed?
     task = @async begin
         reader_task = current_task()
@@ -185,7 +188,7 @@ function async_reader_with_stopfn(io::IO, stopfn, checktime)::Channel
             end
         end
         timeout = Timer(timeout_cb, checktime)
-        data = readavailable(io)
+        data = HTTP.WebSockets.receive(ws)
         close(timeout) # Cancel the timeout
         put!(ch, data)
     end
@@ -209,7 +212,7 @@ A channel is returned with the data. If `stopfn` stops the websocket,
 the data will be `:stopfn`. If the timeout stops the websocket,
 the data will be `:timeout`
 """
-function readfromwebsocket(ws::IO, stopfn, subtimeout)
+function readfromwebsocket(ws::HTTP.WebSockets.WebSocket, stopfn, subtimeout)
     if isnothing(stopfn) && subtimeout > 0
         ch_out = async_reader_with_timeout(ws, subtimeout)
         data = take!(ch_out)
@@ -218,7 +221,7 @@ function readfromwebsocket(ws::IO, stopfn, subtimeout)
         ch_out = async_reader_with_stopfn(ws, stopfn, checktime)
         data = take!(ch_out)
     else
-        data = readavailable(ws)
+        data = HTTP.receive(ws)
     end
     return data
 end

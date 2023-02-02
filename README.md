@@ -2,8 +2,8 @@
 
 *A Julia GraphQL client for seamless integration with a server*
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://deloittedigitalapac.github.io/GraphQLClient.jl/stable)
-[![Stable](https://img.shields.io/badge/docs-dev-blue.svg)](https://deloittedigitalapac.github.io/GraphQLClient.jl/dev)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://deloitteoptimalreality.github.io/GraphQLClient.jl/stable/)
+[![Stable](https://img.shields.io/badge/docs-dev-blue.svg)](https://deloitteoptimalreality.github.io/GraphQLClient.jl/dev)
 [![Build Status](https://github.com/DeloitteDigitalAPAC/GraphQLClient.jl/workflows/CI/badge.svg?branch=main)](https://github.com/DeloitteDigitalAPAC/GraphQLClient.jl/actions?query=workflow%3ACI+branch%3Amain)
 [![Codecov](https://codecov.io/gh/DeloitteDigitalAPAC/GraphQLClient.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/DeloitteDigitalAPAC/GraphQLClient.jl)
 [![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)

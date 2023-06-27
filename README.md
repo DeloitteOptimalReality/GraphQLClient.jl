@@ -45,7 +45,7 @@ client = Client("https://countries.trevorblades.com")
 
 This will, by default, use a query to introspect the server schema.
 
-We can also set a global client to be user by queries, mutations, subscriptions and introspection functions.
+We can also set a global client to be used by queries, mutations, subscriptions and introspection functions.
 
 ```julia
 global_graphql_client(Client("https://countries.trevorblades.com"))
